@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Copy, RefreshCw, AlertCircle, Check } from 'lucide-react';
+import { browserRandomNumberGenerator, browserRandomStringGenerator } from '@/lib/random/browser';
 
 type Strength = 'weak' | 'medium' | 'strong';
 type RandomMode = 'secure' | 'pseudo';
@@ -56,30 +57,26 @@ export function RandomGenerator() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/random', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'string',
-          count: stringState.count,
-          length: stringState.length,
-          options: {
-            strength: stringState.strength,
-            charset: stringState.charset || undefined,
-            exclude: stringState.exclude || undefined,
-            mode: stringState.mode,
-          },
-        }),
-      });
+      const { count, length, strength, charset, exclude, mode } = stringState;
+      const options = {
+        strength,
+        charset: charset || undefined,
+        exclude: exclude || undefined,
+        mode,
+      };
 
-      if (!response.ok) throw new Error(await response.text());
-      const data = await response.json();
-      setStringState(prev => ({ 
-        ...prev, 
-        results: Array.isArray(data.result) ? data.result : [data.result] 
-      }));
+      let results: string[] = [];
+      if (count > 1) {
+        results = Array.from({ length: count }, () =>
+          browserRandomStringGenerator.generate(length, options)
+        );
+      } else {
+        results = [browserRandomStringGenerator.generate(length, options)];
+      }
+
+      setStringState(prev => ({ ...prev, results }));
     } catch (err) {
-      setError(t('error'));
+      setError(err instanceof Error ? err.message : t('error'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -90,29 +87,33 @@ export function RandomGenerator() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/random', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'number',
-          count: numberState.count,
-          min: numberState.min,
-          max: numberState.max,
-          options: {
-            float: numberState.isFloat,
-            mode: numberState.mode,
-          },
-        }),
-      });
+      const { count, min, max, isFloat, mode } = numberState;
+      const options = {
+        mode,
+      };
 
-      if (!response.ok) throw new Error(await response.text());
-      const data = await response.json();
-      setNumberState(prev => ({ 
-        ...prev, 
-        results: Array.isArray(data.result) ? data.result : [data.result] 
-      }));
+      let results: number[] = [];
+      if (isFloat) {
+        if (count > 1) {
+          results = browserRandomNumberGenerator.batch(count, () =>
+            browserRandomNumberGenerator.nextFloat(min, max, options)
+          );
+        } else {
+          results = [browserRandomNumberGenerator.nextFloat(min, max, options)];
+        }
+      } else {
+        if (count > 1) {
+          results = browserRandomNumberGenerator.batch(count, () =>
+            browserRandomNumberGenerator.nextInt(min, max, options)
+          );
+        } else {
+          results = [browserRandomNumberGenerator.nextInt(min, max, options)];
+        }
+      }
+
+      setNumberState(prev => ({ ...prev, results }));
     } catch (err) {
-      setError(t('error'));
+      setError(err instanceof Error ? err.message : t('error'));
       console.error(err);
     } finally {
       setLoading(false);
