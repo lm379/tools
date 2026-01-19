@@ -123,7 +123,7 @@ export function Header() {
               <span className="sr-only">Toggle theme</span>
             </button>
             <Link
-              href="https://github.com"
+              href="https://github.com/lm379/tools"
               target="_blank"
               rel="noreferrer"
             >
