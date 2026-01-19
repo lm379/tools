@@ -19,6 +19,7 @@ export function QRCodeGenerator() {
 
   // File Upload State
   const [file, setFile] = useState<File | null>(null);
+  const [ttl, setTtl] = useState(168);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,8 +45,11 @@ export function QRCodeGenerator() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (selectedFile.size > 100 * 1024 * 1024) { // 100MB
-        setError(t('upload.errorSize'));
+      const isImage = selectedFile.type.startsWith('image/');
+      const maxSize = isImage ? 50 * 1024 * 1024 : 200 * 1024 * 1024; // 50MB for images, 200MB for others (video)
+
+      if (selectedFile.size > maxSize) {
+        setError(t('upload.errorSize')); // Note: You might want to update translation key or text to reflect dynamic size
         return;
       }
       setFile(selectedFile);
@@ -57,7 +61,10 @@ export function QRCodeGenerator() {
     e.preventDefault();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const selectedFile = e.dataTransfer.files[0];
-      if (selectedFile.size > 100 * 1024 * 1024) {
+      const isImage = selectedFile.type.startsWith('image/');
+      const maxSize = isImage ? 50 * 1024 * 1024 : 200 * 1024 * 1024;
+
+      if (selectedFile.size > maxSize) {
         setError(t('upload.errorSize'));
         return;
       }
@@ -80,6 +87,7 @@ export function QRCodeGenerator() {
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type,
+          ttl,
         }),
       });
 
@@ -89,7 +97,7 @@ export function QRCodeGenerator() {
         throw new Error(responseData.message || t('upload.errorGeneric'));
       }
 
-      const { uploadUrl, publicUrl } = responseData.data;
+      const { uploadUrl, key } = responseData.data;
 
       // 2. Upload to S3
       const uploadRes = await fetch(uploadUrl, {
@@ -103,6 +111,25 @@ export function QRCodeGenerator() {
       if (!uploadRes.ok) {
         throw new Error(t('upload.errorUpload'));
       }
+
+      // 3. Confirm and Record in DB
+      const confirmRes = await fetch('/api/files/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+              key,
+              filename: file.name,
+              contentType: file.type,
+              ttl
+          })
+      });
+
+      const confirmData = await confirmRes.json();
+      if (confirmData.status !== 'success') {
+          throw new Error(confirmData.message || 'Failed to confirm upload');
+      }
+
+      const { accessUrl, ttlHours } = confirmData.data;
 
       // Log usage
       fetch('/api/analytics', {
@@ -118,8 +145,15 @@ export function QRCodeGenerator() {
         }),
       }).catch(console.error);
 
-      setContent(publicUrl);
-      setGeneratedContent(publicUrl); // Auto-generate for file uploads
+      setContent(accessUrl);
+      setGeneratedContent(accessUrl);
+      
+      // Show success message with TTL
+      const days = Math.floor(ttlHours / 24);
+      const hours = ttlHours % 24;
+      const timeString = days > 0 ? `${days}天 ${hours}小时` : `${hours}小时`;
+      alert(`文件上传成功！\n文件将在 ${timeString} 后自动删除`);
+
       setFile(null);
     } catch (err: any) {
       console.error(err);
@@ -191,7 +225,10 @@ export function QRCodeGenerator() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium">{t('upload.dragDrop')}</p>
-                    <p className="text-xs text-muted-foreground">{t('upload.limitInfo')}</p>
+                    <div className="text-xs text-muted-foreground">
+                      <p>{t('upload.limitInfoSize')}</p>
+                      <p>{t('upload.limitInfoExpiration', { days: Math.floor(ttl / 24), hours: ttl % 24 })}</p>
+                    </div>
                   </div>
                   <input
                     type="file"
@@ -233,6 +270,22 @@ export function QRCodeGenerator() {
                   {error}
                 </div>
               )}
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('ttlLabel')}</label>
+                <input
+                  type="number"
+                  value={ttl}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    setTtl(val > 168 ? 168 : val);
+                  }}
+                  min={1}
+                  max={168}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+                <p className="text-xs text-muted-foreground">{t('ttlHelp')}</p>
+              </div>
 
               <button
                 onClick={uploadFile}

@@ -217,7 +217,7 @@ export function EncryptionForm() {
         {/* Left: Encodings */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground uppercase font-semibold">Encoding</span>
+            <span className="text-xs text-muted-foreground uppercase font-semibold">{t('encoding')}</span>
             <select
               value={inputEncoding}
               onChange={(e) => setInputEncoding(e.target.value as any)}
@@ -230,7 +230,7 @@ export function EncryptionForm() {
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground uppercase font-semibold">Format</span>
+            <span className="text-xs text-muted-foreground uppercase font-semibold">{t('format')}</span>
             <select
               value={outputFormat}
               onChange={(e) => setOutputFormat(e.target.value as any)}

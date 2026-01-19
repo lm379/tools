@@ -2,7 +2,7 @@
 
 import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
-import { Home, Lock, FileCode, QrCode, Github, Languages, Check, Moon, Sun } from 'lucide-react';
+import { Home, Lock, FileCode, QrCode, Github, Languages, Check, Moon, Sun, Dices } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useState, useRef } from 'react';
 import { useTheme } from 'next-themes';
@@ -19,6 +19,7 @@ export function Header() {
     { name: t('encryption'), href: '/encryption', icon: Lock },
     { name: t('encoding'), href: '/encoding', icon: FileCode },
     { name: t('qrcode'), href: '/qrcode', icon: QrCode },
+    { name: t('random'), href: '/random', icon: Dices },
   ];
 
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);

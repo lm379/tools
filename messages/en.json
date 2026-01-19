@@ -3,11 +3,12 @@
     "home": "Home",
     "encryption": "Encryption",
     "encoding": "Encoding",
-    "qrcode": "QR Code"
+    "qrcode": "QR Code",
+    "random": "Random"
   },
   "Home": {
     "title": "Your Essential Developer Toolkit",
-    "description": "Secure, Fast, and Free tools for everyday tasks. Built with privacy and performance in mind.",
+    "description": "Secure, Fast, and Free tools for everyday tasks.",
     "features": {
       "encryption": {
         "title": "Encryption/Decryption",
@@ -20,9 +21,54 @@
       "qrcode": {
         "title": "QR Code Generator",
         "description": "Create customizable QR codes for links, text, images, and videos."
+      },
+      "random": {
+        "title": "Random Generator",
+        "description": "Generate secure random strings, passwords, and numbers with customizable options."
       }
     },
     "tryNow": "Try it now"
+  },
+  "Random": {
+    "title": "Random Generator",
+    "description": "Generate cryptographically secure random strings, passwords, and numbers. All generation happens securely on your browser.",
+    "tabs": {
+      "string": "String",
+      "number": "Number"
+    },
+    "string": {
+      "length": "Length",
+      "count": "Count (Batch)",
+      "mode": "Mode",
+      "modes": {
+        "secure": "Secure",
+        "pseudo": "Pseudo"
+      },
+      "strength": "Strength",
+      "charset": "Custom Charset",
+      "charsetPlaceholder": "Optional (e.g. ABC123)",
+      "exclude": "Exclude Characters",
+      "excludePlaceholder": "Optional (e.g. O0Il)",
+      "generate": "Generate Strings",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "strengths": {
+        "weak": "Weak (a-z, 0-9)",
+        "medium": "Medium (a-z, A-Z, 0-9)",
+        "strong": "Strong (inc. special chars)"
+      }
+    },
+    "number": {
+      "min": "Minimum Value",
+      "max": "Maximum Value",
+      "count": "Count (Batch)",
+      "type": "Type",
+      "integer": "Integer",
+      "float": "Float",
+      "generate": "Generate Numbers"
+    },
+    "results": "Results",
+    "error": "Error generating random values"
   },
   "Encryption": {
     "title": "Encryption / Decryption",
@@ -44,6 +90,8 @@
     "algorithm": "Algorithm",
     "mode": "Mode",
     "padding": "Padding",
+    "encoding": "Encoding",
+    "format": "Format",
     "algorithms": {
       "AES": "AES",
       "DES": "DES",
@@ -104,6 +152,8 @@
     },
     "contentLabel": "Content (URL or Text)",
     "placeholder": "Enter text or URL here...",
+    "ttlLabel": "TTL (Hours)",
+    "ttlHelp": "File expiration time (1-168 hours)",
     "size": "Size (px)",
     "errorCorrection": "Error Correction",
     "foregroundColor": "Foreground Color",
@@ -118,7 +168,8 @@
     },
     "upload": {
       "dragDrop": "Drag & drop your file here or click to browse",
-      "limitInfo": "Max file size: 100MB. Files expire in 7 days.",
+      "limitInfoSize": "Max file size: Image 50MB / Video 200MB",
+      "limitInfoExpiration": "Files expire in {days} days {hours} hours",
       "selectFile": "Select File",
       "uploadFile": "Upload File",
       "uploading": "Uploading...",
