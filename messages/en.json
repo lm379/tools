@@ -1,0 +1,119 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "encryption": "Encryption",
+    "encoding": "Encoding",
+    "qrcode": "QR Code"
+  },
+  "Home": {
+    "title": "Your Essential Developer Toolkit",
+    "description": "Secure, Fast, and Free tools for everyday tasks. Built with privacy and performance in mind.",
+    "features": {
+      "encryption": {
+        "title": "Encryption/Decryption",
+        "description": "Secure AES-256 encryption and decryption with configurable modes and padding."
+      },
+      "encoding": {
+        "title": "Encoding Converter",
+        "description": "Convert between Base64, URL encoding, and various number bases (Binary, Hex, etc.)."
+      },
+      "qrcode": {
+        "title": "QR Code Generator",
+        "description": "Create customizable QR codes for links, text, images, and videos."
+      }
+    },
+    "tryNow": "Try it now"
+  },
+  "Encryption": {
+    "title": "Encryption / Decryption",
+    "description": "Securely encrypt and decrypt your text using multiple algorithms. All processing is done locally in your browser.",
+    "encrypt": "Encrypt",
+    "decrypt": "Decrypt",
+    "inputText": "Input Text",
+    "enterTextEncrypt": "Enter text to encrypt...",
+    "enterTextDecrypt": "Enter text to decrypt...",
+    "secretKey": "Secret Key",
+    "enterSecretKey": "Enter your secret key",
+    "encryptText": "Encrypt Text",
+    "decryptText": "Decrypt Text",
+    "output": "Output",
+    "resultPlaceholder": "Result will appear here...",
+    "errorKey": "Please enter a secret key",
+    "errorDecrypt": "Decryption failed. Invalid key or corrupted data.",
+    "errorProcess": "An error occurred during processing.",
+    "algorithm": "Algorithm",
+    "mode": "Mode",
+    "padding": "Padding",
+    "algorithms": {
+      "AES": "AES",
+      "DES": "DES",
+      "3DES": "Triple DES",
+      "Blowfish": "Blowfish",
+      "RSA": "RSA"
+    },
+    "modes": {
+      "CBC": "CBC",
+      "ECB": "ECB",
+      "GCM": "GCM",
+      "CTR": "CTR",
+      "CFB": "CFB",
+      "OFB": "OFB"
+    },
+    "rsa": {
+      "publicKey": "Public Key",
+      "privateKey": "Private Key",
+      "generateKeys": "Generate Keys",
+      "keySize": "Key Size"
+    }
+  },
+  "Encoding": {
+    "title": "Encoding Converter",
+    "description": "Convert between various formats including Base64, URL encoding, and number bases.",
+    "base64Converter": "Base64 Converter",
+    "urlConverter": "URL Converter",
+    "numberBase": "Number Base",
+    "input": "Input",
+    "output": "Output",
+    "encode": "Encode",
+    "decode": "Decode",
+    "enterText": "Enter text to {mode}...",
+    "invalidInput": "Invalid input for decoding",
+    "decimal": "Decimal (10)",
+    "hexadecimal": "Hexadecimal (16)",
+    "binary": "Binary (2)",
+    "octal": "Octal (8)"
+  },
+  "QRCode": {
+    "title": "QR Code Generator",
+    "description": "Create customizable QR codes for links, text, and more. Download in high quality.",
+    "tabs": {
+      "text": "Text / URL",
+      "file": "Image / Video"
+    },
+    "contentLabel": "Content (URL or Text)",
+    "placeholder": "Enter text or URL here...",
+    "size": "Size (px)",
+    "errorCorrection": "Error Correction",
+    "foregroundColor": "Foreground Color",
+    "backgroundColor": "Background Color",
+    "generate": "Generate QR Code",
+    "downloadPNG": "Download PNG",
+    "levels": {
+      "L": "Low (7%)",
+      "M": "Medium (15%)",
+      "Q": "Quartile (25%)",
+      "H": "High (30%)"
+    },
+    "upload": {
+      "dragDrop": "Drag & drop your file here or click to browse",
+      "limitInfo": "Max file size: 100MB. Files expire in 7 days.",
+      "selectFile": "Select File",
+      "uploadFile": "Upload File",
+      "uploading": "Uploading...",
+      "uploadComplete": "Upload Complete!",
+      "errorSize": "File size exceeds 100MB limit",
+      "errorUpload": "Failed to upload file to storage",
+      "errorGeneric": "An error occurred during upload"
+    }
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "Navigation": {
+    "home": "首页",
+    "encryption": "加密解密",
+    "encoding": "编码转换",
+    "qrcode": "二维码"
+  },
+  "Home": {
+    "title": "您的必备开发工具箱",
+    "description": "安全、快速、免费的日常开发工具。注重隐私与性能。",
+    "features": {
+      "encryption": {
+        "title": "加密/解密",
+        "description": "安全的 AES-256 加密解密，支持多种模式和填充配置。"
+      },
+      "encoding": {
+        "title": "编码转换",
+        "description": "Base64、URL 编码以及各种进制（二进制、十六进制等）互转。"
+      },
+      "qrcode": {
+        "title": "二维码生成",
+        "description": "为链接、文本、图片和视频生成可自定义的二维码。"
+      }
+    },
+    "tryNow": "立即尝试"
+  },
+  "Encryption": {
+    "title": "加密 / 解密",
+    "description": "使用多种算法安全地加密和解密您的文本。所有处理都在您的浏览器中本地完成。",
+    "encrypt": "加密",
+    "decrypt": "解密",
+    "inputText": "输入文本",
+    "enterTextEncrypt": "输入要加密的文本...",
+    "enterTextDecrypt": "输入要解密的文本...",
+    "secretKey": "密钥",
+    "enterSecretKey": "请输入您的密钥",
+    "encryptText": "加密文本",
+    "decryptText": "解密文本",
+    "output": "输出结果",
+    "resultPlaceholder": "结果将显示在这里...",
+    "errorKey": "请输入密钥",
+    "errorDecrypt": "解密失败。密钥无效或数据损坏。",
+    "errorProcess": "处理过程中发生错误。",
+    "algorithm": "算法",
+    "mode": "模式",
+    "padding": "填充",
+    "algorithms": {
+      "AES": "AES",
+      "DES": "DES",
+      "3DES": "3DES",
+      "Blowfish": "Blowfish",
+      "RSA": "RSA"
+    },
+    "modes": {
+      "CBC": "CBC",
+      "ECB": "ECB",
+      "GCM": "GCM",
+      "CTR": "CTR",
+      "CFB": "CFB",
+      "OFB": "OFB"
+    },
+    "rsa": {
+      "publicKey": "公钥",
+      "privateKey": "私钥",
+      "generateKeys": "生成密钥对",
+      "keySize": "密钥长度"
+    }
+  },
+  "Encoding": {
+    "title": "编码转换",
+    "description": "支持多种格式之间的转换，包括 Base64、URL 编码和进制转换。",
+    "base64Converter": "Base64 转换",
+    "urlConverter": "URL 转换",
+    "numberBase": "进制转换",
+    "input": "输入",
+    "output": "输出",
+    "encode": "编码",
+    "decode": "解码",
+    "enterText": "输入要{mode}的文本...",
+    "invalidInput": "无效的输入，无法解码",
+    "decimal": "十进制 (10)",
+    "hexadecimal": "十六进制 (16)",
+    "binary": "二进制 (2)",
+    "octal": "八进制 (8)"
+  },
+  "QRCode": {
+    "title": "二维码生成器",
+    "description": "创建可自定义的链接、文本等二维码。支持高清下载。",
+    "tabs": {
+      "text": "文本 / 链接",
+      "file": "图片 / 视频"
+    },
+    "contentLabel": "内容 (链接或文本)",
+    "placeholder": "在此输入文本或链接...",
+    "size": "尺寸 (px)",
+    "errorCorrection": "纠错等级",
+    "foregroundColor": "前景色",
+    "backgroundColor": "背景色",
+    "generate": "生成二维码",
+    "downloadPNG": "下载 PNG",
+    "levels": {
+      "L": "低 (7%)",
+      "M": "中 (15%)",
+      "Q": "四分位 (25%)",
+      "H": "高 (30%)"
+    },
+    "upload": {
+      "dragDrop": "拖放文件到此处或点击浏览",
+      "limitInfo": "最大文件大小：100MB。文件将在 7 天后过期。",
+      "selectFile": "选择文件",
+      "uploadFile": "上传文件",
+      "uploading": "上传中...",
+      "uploadComplete": "上传完成！",
+      "errorSize": "文件大小超过 100MB 限制",
+      "errorUpload": "文件上传失败",
+      "errorGeneric": "上传过程中发生错误"
+    }
+  }
+}
