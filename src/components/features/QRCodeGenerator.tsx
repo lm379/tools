@@ -131,20 +131,6 @@ export function QRCodeGenerator() {
 
       const { accessUrl, ttlHours } = confirmData.data;
 
-      // Log usage
-      fetch('/api/analytics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tool_type: 'qrcode_upload',
-          metadata: { 
-            filename: file.name,
-            size: file.size,
-            type: file.type 
-          }
-        }),
-      }).catch(console.error);
-
       setContent(accessUrl);
       setGeneratedContent(accessUrl);
       

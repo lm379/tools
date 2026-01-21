@@ -34,16 +34,6 @@ export function EncryptionForm() {
     }
 
     try {
-      // Log usage
-      fetch('/api/analytics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tool_type: 'encryption',
-          metadata: { mode: action, algorithm, length: input.length }
-        }),
-      }).catch(console.error);
-
       if (algorithm === 'RSA') {
         if (action === 'encrypt') {
           const result = await RsaService.encrypt(input, secretKey, {
