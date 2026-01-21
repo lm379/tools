@@ -3,8 +3,8 @@ import { supabase } from '@/lib/supabase';
 import { cdnSigner } from '@/lib/cdn-signer';
 import { BUCKET_NAME } from '@/lib/aws-s3';
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  const { id } = params;
 
   if (!id) {
     return new NextResponse('File ID Required', { status: 400 });

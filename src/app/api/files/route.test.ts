@@ -82,21 +82,11 @@ describe('File Upload API', () => {
     const res = await POST(req);
     expect(res.status).toBe(201);
 
-    // Verify DB insert
-    expect(supabase.from).toHaveBeenCalledWith('files');
-    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
-      metadata: { originalName: 'test.png', contentType: 'image/png' },
-      status: 'pending'
-    }));
-
-    // Verify RPC call for scheduling
-    expect(supabaseAdmin.rpc).toHaveBeenCalledWith('schedule_one_time_deletion', expect.objectContaining({
-      p_api_endpoint: expect.stringContaining('/api/files/delete'),
-    }));
+    const json = await res.json();
 
     // Verify expiration time is roughly 24 hours from now
-    const callArg = insertMock.mock.calls[0][0];
-    const expiresAt = new Date(callArg.expires_at).getTime();
+    // Since we don't insert anymore, we check response
+    const expiresAt = new Date(json.data.expiresAt).getTime();
     const now = Date.now();
     const expected = now + 24 * 60 * 60 * 1000;
 

@@ -4,7 +4,8 @@
     "encryption": "Encryption",
     "encoding": "Encoding",
     "qrcode": "QR Code",
-    "random": "Random"
+    "random": "Random",
+    "ip": "IP Toolbox"
   },
   "Home": {
     "title": "Your Essential Developer Toolkit",
@@ -25,9 +26,48 @@
       "random": {
         "title": "Random Generator",
         "description": "Generate secure random strings, passwords, and numbers with customizable options."
+      },
+      "ip": {
+        "title": "IP Toolbox",
+        "description": "IPv4 Subnet Calculator and User IP Query."
       }
     },
     "tryNow": "Try it now"
+  },
+  "IP": {
+    "title": "IP Toolbox",
+    "description": "IPv4 Subnet Calculator and User IP Query.",
+    "subnet": {
+      "title": "Subnet Calculator",
+      "ipAddress": "IPv4 Address",
+      "ipv6Address": "IPv6 Address",
+      "subnetMask": "Subnet Mask",
+      "cidr": "CIDR",
+      "prefixLength": "Prefix Length",
+      "calculate": "Calculate",
+      "results": "Results",
+      "network": "Network Address",
+      "broadcast": "Broadcast Address",
+      "firstIP": "First Usable IP",
+      "lastIP": "Last Usable IP",
+      "totalHosts": "Total Hosts",
+      "mask": "Subnet Mask",
+      "compressed": "Compressed",
+      "expanded": "Expanded"
+    },
+    "myIP": {
+      "title": "My IP Information",
+      "query": "Query IPs",
+      "ip": "IP Address",
+      "location": "Location",
+      "isp": "ISP",
+      "as": "AS Number",
+      "loading": "Loading...",
+      "error": "Error fetching IP info",
+      "ipv4": "IPv4 Address",
+      "ipv6": "IPv6 Address",
+      "notDetected": "Not Detected / Unavailable"
+    }
   },
   "Random": {
     "title": "Random Generator",

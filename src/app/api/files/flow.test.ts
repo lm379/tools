@@ -116,7 +116,7 @@ describe('Complete File Upload Flow', () => {
         })
       });
 
-      const params = Promise.resolve({ id: '123' });
+      const params = { id: '123' };
       const req = new NextRequest('http://localhost/api/files/123');
       const res = await RedirectGET(req, { params });
 
@@ -140,7 +140,7 @@ describe('Complete File Upload Flow', () => {
         })
       });
 
-      const params = Promise.resolve({ id: '123' });
+      const params = { id: '123' };
       const req = new NextRequest('http://localhost/api/files/123');
       const res = await RedirectGET(req, { params });
 

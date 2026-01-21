@@ -1,10 +1,9 @@
-'use client';
 
-import { EncryptionForm } from '@/components/features/EncryptionForm';
+import { IPToolbox } from '@/components/features/IPToolbox';
 import { useTranslations } from 'next-intl';
 
-export default function EncryptionPage() {
-  const t = useTranslations('Encryption');
+export default function IPPage() {
+  const t = useTranslations('IP');
 
   return (
     <div className="space-y-6">
@@ -14,10 +13,7 @@ export default function EncryptionPage() {
           {t('description')}
         </p>
       </div>
-
-      <div className="border border-black/10 dark:border-white/10 rounded-sm p-6 bg-card min-h-[500px]">
-        <EncryptionForm />
-      </div>
+      <IPToolbox />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/routing';
-import { Lock, FileCode, QrCode, ArrowRight, Dices } from 'lucide-react';
+import { Lock, FileCode, QrCode, ArrowRight, Dices, Network } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export default function Home() {
@@ -32,6 +32,12 @@ export default function Home() {
       href: "/random",
       color: "text-orange-500",
     },
+    {
+      key: "ip",
+      icon: Network,
+      href: "/ip",
+      color: "text-cyan-500",
+    },
   ];
 
   return (
@@ -45,7 +51,7 @@ export default function Home() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
         {features.map((feature) => (
           <Link
             key={feature.href}
