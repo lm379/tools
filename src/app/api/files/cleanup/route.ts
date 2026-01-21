@@ -6,12 +6,14 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 export async function POST(request: NextRequest) {
   try {
     // Optional: Verify Authorization header if needed
-    // const authHeader = request.headers.get('Authorization');
-    // if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) { ... }
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return errorResponse('Unauthorized', 401);
+    }
 
     // 1. Query expired files
     const now = new Date().toISOString();
-    
+
     // Batch size of 100 to ensure reliability within timeout limits
     const { data: expiredFiles, error: fetchError } = await supabase
       .from('files')
@@ -37,10 +39,10 @@ export async function POST(request: NextRequest) {
     // 2. Delete from S3
     // S3 delete is idempotent, so it's safe to retry if it failed previously
     try {
-        await s3Storage.deleteFiles(keysToDelete);
+      await s3Storage.deleteFiles(keysToDelete);
     } catch (s3Error) {
-        console.error('S3 Delete Error:', s3Error);
-        return errorResponse('Failed to delete files from storage', 500);
+      console.error('S3 Delete Error:', s3Error);
+      return errorResponse('Failed to delete files from storage', 500);
     }
 
     // 3. Delete from DB
@@ -50,10 +52,10 @@ export async function POST(request: NextRequest) {
       .in('id', idsToDelete);
 
     if (deleteError) {
-        console.error('DB Delete Error:', deleteError);
-        // Files are gone from S3 but record remains. 
-        // Next run will try to delete from S3 (no-op) and then try DB delete again.
-        return errorResponse('Failed to delete records from database', 500);
+      console.error('DB Delete Error:', deleteError);
+      // Files are gone from S3 but record remains. 
+      // Next run will try to delete from S3 (no-op) and then try DB delete again.
+      return errorResponse('Failed to delete records from database', 500);
     }
 
     return successResponse({ count: idsToDelete.length, keys: keysToDelete }, 'Cleanup successful');
