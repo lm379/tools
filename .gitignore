@@ -34,3 +34,4 @@ coverage/
 !.edgeone/project.json
 .tef_dist/*
   
+supabase

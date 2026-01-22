@@ -197,8 +197,8 @@
     },
     "contentLabel": "Content (URL or Text)",
     "placeholder": "Enter text or URL here...",
-    "ttlLabel": "TTL (Hours)",
-    "ttlHelp": "File expiration time (1-168 hours)",
+    "ttlLabel": "TTL",
+    "ttlHelp": "File expiration time (1 minute - 7 days)",
     "size": "Size (px)",
     "errorCorrection": "Error Correction",
     "foregroundColor": "Foreground Color",
@@ -214,7 +214,7 @@
     "upload": {
       "dragDrop": "Drag & drop your file here or click to browse",
       "limitInfoSize": "Max file size: Image 50MB / Video 200MB",
-      "limitInfoExpiration": "Files expire in {days} days {hours} hours",
+      "limitInfoExpiration": "Files expire in {days} days {hours} hours {minutes} minutes",
       "selectFile": "Select File",
       "uploadFile": "Upload File",
       "uploading": "Uploading...",
@@ -225,7 +225,8 @@
       "successTitle": "File Uploaded Successfully!",
       "successDesc": "File will be automatically deleted after {timeString}",
       "days": "days",
-      "hours": "hours"
+      "hours": "hours",
+      "minutes": "minutes"
     }
   }
 }

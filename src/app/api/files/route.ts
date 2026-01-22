@@ -14,11 +14,12 @@ export async function POST(request: NextRequest) {
     }
 
     // TTL Validation
-    // Default 168 hours (7 days)
-    let ttlHours = (ttl !== undefined && ttl !== null && ttl !== '') ? parseInt(ttl as string) : 168;
+    // Default 10080 minutes (7 days)
+    // Accept TTL in minutes
+    let ttlMinutes = (ttl !== undefined && ttl !== null && ttl !== '') ? parseInt(ttl as string) : 10080;
 
-    if (isNaN(ttlHours) || ttlHours < 1 || ttlHours > 168) {
-      throw new ApiError('TTL must be between 1 and 168 hours', 400);
+    if (isNaN(ttlMinutes) || ttlMinutes < 1 || ttlMinutes > 10080) {
+      throw new ApiError('TTL must be between 1 minute and 7 days', 400);
     }
 
     if (!BUCKET_NAME) {
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate expiration
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + ttlHours);
+    expiresAt.setMinutes(expiresAt.getMinutes() + ttlMinutes);
 
     // Get Signed URL for Upload (Direct to S3)
     const { uploadUrl, publicUrl: s3PublicUrl } = await s3Storage.getUploadUrl(uniqueFilename, contentType);
