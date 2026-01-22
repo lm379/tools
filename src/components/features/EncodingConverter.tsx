@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { TabGroup } from '@/components/ui/TabGroup';
 
 type TabType = 'base64' | 'url' | 'number' | 'signed';
 
@@ -12,48 +13,16 @@ export function EncodingConverter() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8">
-      <div className="flex gap-2 bg-muted/30 p-1.5 rounded-xl border border-border/50 backdrop-blur-sm overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('base64')}
-          className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 capitalize whitespace-nowrap ${
-            activeTab === 'base64'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] hover:bg-primary/90 active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('base64Converter')}
-        </button>
-        <button
-          onClick={() => setActiveTab('url')}
-          className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 capitalize whitespace-nowrap ${
-            activeTab === 'url'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] hover:bg-primary/90 active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('urlConverter')}
-        </button>
-        <button
-          onClick={() => setActiveTab('number')}
-          className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 capitalize whitespace-nowrap ${
-            activeTab === 'number'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] hover:bg-primary/90 active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('numberBase')}
-        </button>
-        <button
-          onClick={() => setActiveTab('signed')}
-          className={`flex-1 min-w-[120px] py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 capitalize whitespace-nowrap ${
-            activeTab === 'signed'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] hover:bg-primary/90 active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('signedConverter')}
-        </button>
-      </div>
+      <TabGroup
+        value={activeTab}
+        onChange={setActiveTab}
+        items={[
+          { value: 'base64', label: t('base64Converter') },
+          { value: 'url', label: t('urlConverter') },
+          { value: 'number', label: t('numberBase') },
+          { value: 'signed', label: t('signedConverter') },
+        ]}
+      />
 
       <div className="bg-card border border-black/10 dark:border-white/10 rounded-sm p-6">
         {activeTab === 'base64' && <Base64Converter />}
@@ -411,25 +380,25 @@ function SignedNumberConverter() {
   // Helper to detect and parse input (Binary or Hex)
   const parseInput = (val: string, width: bigint): bigint | null => {
     const cleanVal = cleanBinary(val);
-    
+
     // Check for Hex
     if (cleanVal.startsWith('0x') || cleanVal.startsWith('0X')) {
-        try {
-            const hexStr = cleanVal.slice(2);
-            if (!/^[0-9a-fA-F]+$/.test(hexStr)) return null;
-            const val = BigInt('0x' + hexStr);
-            // Check if value fits in width? For signed inputs, we just take the bits.
-            // But we need to make sure we treat it as the raw bits for that representation.
-            return val;
-        } catch {
-            return null;
-        }
+      try {
+        const hexStr = cleanVal.slice(2);
+        if (!/^[0-9a-fA-F]+$/.test(hexStr)) return null;
+        const val = BigInt('0x' + hexStr);
+        // Check if value fits in width? For signed inputs, we just take the bits.
+        // But we need to make sure we treat it as the raw bits for that representation.
+        return val;
+      } catch {
+        return null;
+      }
     }
 
     // Check for Binary
     if (/^[01]+$/.test(cleanVal)) {
-        if (cleanVal.length > width) return null;
-        return BigInt('0b' + cleanVal);
+      if (cleanVal.length > width) return null;
+      return BigInt('0b' + cleanVal);
     }
 
     return null;
@@ -471,8 +440,8 @@ function SignedNumberConverter() {
 
     // Sign-Magnitude & One's Complement (Symmetric Range)
     if (val < minSymVal) {
-       results.signMagnitude = 'Overflow';
-       results.onesComplement = 'Overflow';
+      results.signMagnitude = 'Overflow';
+      results.onesComplement = 'Overflow';
     } else {
       if (val >= BigInt(0)) {
         const bin = val.toString(2).padStart(Number(width), '0');
@@ -482,7 +451,7 @@ function SignedNumberConverter() {
         // Negative
         const absVal = -val;
         const absStr = absVal.toString(2).padStart(Number(width) - 1, '0');
-        
+
         // Sign-Mag: 1 + abs
         results.signMagnitude = formatBinary('1' + absStr);
 
@@ -530,7 +499,7 @@ function SignedNumberConverter() {
     try {
       let decimalVal: bigint;
       const width = BigInt(bitWidth);
-      
+
       if (type === 'decimal') {
         if (!/^-?\d+$/.test(value)) return;
         decimalVal = BigInt(value);
@@ -541,51 +510,51 @@ function SignedNumberConverter() {
         // Convert raw value (BigInt) to padded binary string for bit manipulation logic
         // This handles both Hex and Binary inputs uniformly
         const paddedVal = rawVal.toString(2).padStart(Number(width), '0');
-        
+
         // If Hex input was too large for width, just take lower bits? 
         // Or should parseInput reject it? Currently parseInput returns BigInt.
         // We should truncate to width bits.
         const truncatedVal = BigInt.asUintN(Number(width), rawVal);
         const bitStr = truncatedVal.toString(2).padStart(Number(width), '0');
-        
+
         const signBit = bitStr[0];
         const restBits = bitStr.slice(1);
 
         if (type === 'signMagnitude') {
-           const magnitude = BigInt('0b' + restBits);
-           decimalVal = signBit === '1' ? -magnitude : magnitude;
+          const magnitude = BigInt('0b' + restBits);
+          decimalVal = signBit === '1' ? -magnitude : magnitude;
         } else if (type === 'onesComplement') {
-           if (signBit === '0') {
-             decimalVal = BigInt('0b' + restBits);
-           } else {
-             // Negative: invert bits -> magnitude
-             const invertedRest = restBits.split('').map(c => c === '1' ? '0' : '1').join('');
-             decimalVal = -BigInt('0b' + invertedRest);
-           }
+          if (signBit === '0') {
+            decimalVal = BigInt('0b' + restBits);
+          } else {
+            // Negative: invert bits -> magnitude
+            const invertedRest = restBits.split('').map(c => c === '1' ? '0' : '1').join('');
+            decimalVal = -BigInt('0b' + invertedRest);
+          }
         } else if (type === 'twosComplement') {
-            const unsigned = BigInt('0b' + bitStr);
-            if (signBit === '1') {
-                decimalVal = unsigned - (BigInt(1) << width);
-            } else {
-                decimalVal = unsigned;
-            }
+          const unsigned = BigInt('0b' + bitStr);
+          if (signBit === '1') {
+            decimalVal = unsigned - (BigInt(1) << width);
+          } else {
+            decimalVal = unsigned;
+          }
         } else if (type === 'excess') {
-            const toggledSign = signBit === '1' ? '0' : '1';
-            const realTwosComp = toggledSign + restBits;
-            const unsigned = BigInt('0b' + realTwosComp);
-            if (toggledSign === '1') {
-                decimalVal = unsigned - (BigInt(1) << width);
-            } else {
-                decimalVal = unsigned;
-            }
+          const toggledSign = signBit === '1' ? '0' : '1';
+          const realTwosComp = toggledSign + restBits;
+          const unsigned = BigInt('0b' + realTwosComp);
+          if (toggledSign === '1') {
+            decimalVal = unsigned - (BigInt(1) << width);
+          } else {
+            decimalVal = unsigned;
+          }
         } else {
-            return;
+          return;
         }
       }
 
       // Generate other values
       const generated = generateValues(decimalVal, width);
-      
+
       // Update all EXCEPT the current one (to preserve cursor/formatting state)
       setValues(prev => ({
         ...generated,
@@ -607,11 +576,10 @@ function SignedNumberConverter() {
               <button
                 key={width}
                 onClick={() => setBitWidth(width as any)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  bitWidth === width
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${bitWidth === width
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-muted/80 text-foreground'
-                }`}
+                  }`}
               >
                 {width}-bit
               </button>
@@ -630,11 +598,10 @@ function SignedNumberConverter() {
               <button
                 key={item.key}
                 onClick={() => setOutputMode(item.key as 'auto' | 'bin' | 'hex')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  outputMode === item.key
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${outputMode === item.key
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-muted/80 text-foreground'
-                }`}
+                  }`}
               >
                 {item.label}
               </button>

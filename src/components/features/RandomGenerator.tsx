@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Copy, RefreshCw, AlertCircle, Check } from 'lucide-react';
 import { browserRandomNumberGenerator, browserRandomStringGenerator } from '@/lib/random/browser';
+import { TabGroup } from '@/components/ui/TabGroup';
 
 type Strength = 'weak' | 'medium' | 'strong';
 type RandomMode = 'secure' | 'pseudo';
@@ -132,28 +133,14 @@ export function RandomGenerator() {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Tabs - Updated to match QRCodeGenerator style */}
-      <div className="flex gap-2 bg-muted/30 p-1.5 rounded-xl backdrop-blur-sm">
-        <button
-          onClick={() => setActiveTab('string')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
-            activeTab === 'string'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('tabs.string')}
-        </button>
-        <button
-          onClick={() => setActiveTab('number')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
-            activeTab === 'number'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('tabs.number')}
-        </button>
-      </div>
+      <TabGroup
+        value={activeTab}
+        onChange={setActiveTab}
+        items={[
+          { value: 'string', label: t('tabs.string') },
+          { value: 'number', label: t('tabs.number') },
+        ]}
+      />
 
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Controls */}

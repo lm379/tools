@@ -1,5 +1,14 @@
 import { QRCodeGenerator } from '@/components/features/QRCodeGenerator';
 import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
+
+export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+  const t = await getTranslations({ locale, namespace: 'QRCode' });
+  return {
+    title: t('title'),
+    description: t('description')
+  };
+}
 
 export default function QRCodePage() {
   const t = useTranslations('QRCode');

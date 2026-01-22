@@ -1,4 +1,9 @@
 {
+  "Metadata": {
+    "siteName": "DevTools",
+    "title": "DevTools - Multi-Function Utility Website",
+    "description": "Secure, Fast, and Free tools for everyday tasks including Encryption, Encoding, QR Code Generation, and File Upload."
+  },
   "Navigation": {
     "home": "Home",
     "encryption": "Encryption",
@@ -216,7 +221,11 @@
       "uploadComplete": "Upload Complete!",
       "errorSize": "File size exceeds 100MB limit",
       "errorUpload": "Failed to upload file to storage",
-      "errorGeneric": "An error occurred during upload"
+      "errorGeneric": "An error occurred during upload",
+      "successTitle": "File Uploaded Successfully!",
+      "successDesc": "File will be automatically deleted after {timeString}",
+      "days": "days",
+      "hours": "hours"
     }
   }
 }

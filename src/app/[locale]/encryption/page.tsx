@@ -1,7 +1,14 @@
-'use client';
-
 import { EncryptionForm } from '@/components/features/EncryptionForm';
 import { useTranslations } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
+
+export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
+  const t = await getTranslations({ locale, namespace: 'Encryption' });
+  return {
+    title: t('title'),
+    description: t('description')
+  };
+}
 
 export default function EncryptionPage() {
   const t = useTranslations('Encryption');

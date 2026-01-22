@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { calculateSubnet, SubnetResult, isValidIPv4, isValidSubnetMask, maskToCIDR, cidrToMask } from '@/lib/ip/subnet';
 import { calculateSubnetIPv6, IPv6SubnetResult, isValidIPv6 } from '@/lib/ip/ipv6';
 import { cn } from '@/lib/utils';
+import { TabGroup } from '@/components/ui/TabGroup';
 
 export function IPToolbox() {
   const t = useTranslations('IP');
@@ -23,7 +24,7 @@ export function IPToolbox() {
 
 function SubnetCalculator({ t }: { t: any }) {
   const [protocol, setProtocol] = useState<'IPv4' | 'IPv6'>('IPv4');
-  
+
   // IPv4 State
   const [ip, setIp] = useState('192.168.1.1');
   const [cidr, setCidr] = useState(24);
@@ -87,7 +88,7 @@ function SubnetCalculator({ t }: { t: any }) {
   useEffect(() => {
     if (protocol === 'IPv4') {
       if (isValidIPv4(ip) && cidr >= 0 && cidr <= 32) {
-          setResult(calculateSubnet(ip, cidr));
+        setResult(calculateSubnet(ip, cidr));
       }
     } else {
       if (isValidIPv6(ipv6) && prefix >= 0 && prefix <= 128) {
@@ -104,30 +105,16 @@ function SubnetCalculator({ t }: { t: any }) {
           <h2 className="text-lg font-semibold">{t('subnet.title')}</h2>
         </div>
       </div>
-      
+
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-center pb-2">
-          <div className="bg-muted p-1 rounded-lg flex items-center">
-             <button
-                onClick={() => setProtocol('IPv4')}
-                className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
-                  protocol === 'IPv4' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-             >
-               IPv4
-             </button>
-             <button
-                onClick={() => setProtocol('IPv6')}
-                className={cn(
-                  "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
-                  protocol === 'IPv6' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-             >
-               IPv6
-             </button>
-          </div>
-        </div>
+        <TabGroup
+          value={protocol}
+          onChange={setProtocol}
+          items={[
+            { value: 'IPv4', label: 'IPv4' },
+            { value: 'IPv6', label: 'IPv6' },
+          ]}
+        />
 
         {protocol === 'IPv4' ? (
           <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
@@ -209,11 +196,11 @@ function SubnetCalculator({ t }: { t: any }) {
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 font-mono"
                 />
               </div>
-              <input 
-                type="range" 
-                min="0" 
-                max="128" 
-                value={prefix} 
+              <input
+                type="range"
+                min="0"
+                max="128"
+                value={prefix}
                 onChange={handlePrefixChange}
                 className="w-full mt-2 accent-primary"
               />
@@ -278,7 +265,7 @@ function IPQuery({ t }: { t: any }) {
           <h2 className="text-lg font-semibold">{t('myIP.title')}</h2>
         </div>
       </div>
-      
+
       <div className="p-6 flex-1 space-y-8">
         <IPSection t={t} version="IPv4" url="https://api-ipv4.ip.sb/geoip" />
         <div className="border-t border-border/50"></div>
@@ -306,11 +293,11 @@ function IPSection({ t, version, url }: { t: any, version: 'IPv4' | 'IPv6', url:
           'Accept': 'application/json',
         },
       });
-      
+
       if (!res.ok) throw new Error('Failed to fetch IP info');
-      
+
       const json = await res.json();
-      
+
       // Map ip.sb response to IPInfo interface
       // ip.sb returns: ip, country, region, city, latitude, longitude, isp, organization, asn, etc.
       setData({
@@ -372,39 +359,39 @@ function IPSection({ t, version, url }: { t: any, version: 'IPv4' | 'IPv6', url:
         </div>
       ) : data ? (
         <div className="space-y-4">
-           <div className="flex items-center gap-2">
-             <div className="text-xl font-mono font-bold tracking-tight">{data.ip}</div>
-             <button
-               onClick={() => navigator.clipboard.writeText(data.ip)}
-               className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground"
-               title="Copy"
-             >
-               <Copy className="w-3.5 h-3.5" />
-             </button>
-           </div>
-           
-           {(data.city || data.org || data.asn) && (
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm">
-               {data.city && (
-                 <div className="flex items-center gap-2 text-muted-foreground">
-                   <MapPin className="w-3.5 h-3.5" />
-                   <span>{[data.city, data.region, data.country_name].filter(Boolean).join(', ')}</span>
-                 </div>
-               )}
-               {data.org && (
-                 <div className="flex items-center gap-2 text-muted-foreground">
-                   <Server className="w-3.5 h-3.5" />
-                   <span>{data.org}</span>
-                 </div>
-               )}
-               {data.asn && (
-                 <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2">
-                   <Network className="w-3.5 h-3.5" />
-                   <span>{data.asn}</span>
-                 </div>
-               )}
-             </div>
-           )}
+          <div className="flex items-center gap-2">
+            <div className="text-xl font-mono font-bold tracking-tight">{data.ip}</div>
+            <button
+              onClick={() => navigator.clipboard.writeText(data.ip)}
+              className="p-1.5 hover:bg-muted rounded-md transition-colors text-muted-foreground"
+              title="Copy"
+            >
+              <Copy className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {(data.city || data.org || data.asn) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm">
+              {data.city && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5" />
+                  <span>{[data.city, data.region, data.country_name].filter(Boolean).join(', ')}</span>
+                </div>
+              )}
+              {data.org && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Server className="w-3.5 h-3.5" />
+                  <span>{data.org}</span>
+                </div>
+              )}
+              {data.asn && (
+                <div className="flex items-center gap-2 text-muted-foreground sm:col-span-2">
+                  <Network className="w-3.5 h-3.5" />
+                  <span>{data.asn}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       ) : null}
     </div>
