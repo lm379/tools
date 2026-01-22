@@ -26,6 +26,13 @@ jest.mock('@/lib/storage/s3-storage', () => ({
   s3Storage: {
     getUploadUrl: jest.fn(),
     deleteFile: jest.fn(),
+    getFileMetadata: jest.fn(),
+  },
+}));
+
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    log: jest.fn(),
   },
 }));
 
@@ -49,7 +56,7 @@ describe('Complete File Upload Flow', () => {
 
       const req = new NextRequest('http://localhost/api/files', {
         method: 'POST',
-        body: JSON.stringify({ filename: 'test.png', contentType: 'image/png', ttl: 24 }),
+        body: JSON.stringify({ filename: 'test.png', contentType: 'image/png', ttl: 1440 }),
       });
 
       const res = await UploadPOST(req);
@@ -63,6 +70,12 @@ describe('Complete File Upload Flow', () => {
 
   describe('Step 2: Confirm Upload', () => {
     it('should record file in DB and schedule deletion', async () => {
+      // Mock S3 Metadata
+      (s3Storage.getFileMetadata as jest.Mock).mockResolvedValue({
+        size: 1024,
+        contentType: 'image/png'
+      });
+
       // Mock DB Insert
       const mockFileId = '123-uuid';
       (supabase.from as jest.Mock).mockReturnValue({
@@ -79,7 +92,7 @@ describe('Complete File Upload Flow', () => {
           key: '2024-01-01/uuid-test.png',
           filename: 'test.png',
           contentType: 'image/png',
-          ttl: 24
+          ttl: 1440
         }),
       });
 

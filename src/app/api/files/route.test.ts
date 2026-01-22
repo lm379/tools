@@ -43,7 +43,7 @@ describe('File Upload API', () => {
   it('should validate TTL range (too high)', async () => {
     const req = new NextRequest('http://localhost/api/files', {
       method: 'POST',
-      body: JSON.stringify({ filename: 'test.png', contentType: 'image/png', ttl: 200 }),
+      body: JSON.stringify({ filename: 'test.png', contentType: 'image/png', ttl: 10081 }),
     });
     const res = await POST(req);
     expect(res.status).toBe(400);
@@ -76,7 +76,7 @@ describe('File Upload API', () => {
 
     const req = new NextRequest('http://localhost/api/files', {
       method: 'POST',
-      body: JSON.stringify({ filename: 'test.png', contentType: 'image/png', ttl: 24 }),
+      body: JSON.stringify({ filename: 'test.png', contentType: 'image/png', ttl: 1440 }),
     });
 
     const res = await POST(req);

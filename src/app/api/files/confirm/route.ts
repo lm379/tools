@@ -3,6 +3,7 @@ import { s3Storage } from '@/lib/storage/s3-storage';
 import { BUCKET_NAME } from '@/lib/aws-s3';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { successResponse, handleApiError, ApiError } from '@/lib/api-response';
+import { logger } from '@/lib/logger';
 // import { cdnSigner } from '@/lib/cdn-signer';
 
 export async function POST(request: NextRequest) {
@@ -14,17 +15,19 @@ export async function POST(request: NextRequest) {
     }
 
     // TTL Validation
-    let ttlHours = (ttl !== undefined && ttl !== null && ttl !== '') ? parseInt(ttl as string) : 168;
-    if (isNaN(ttlHours) || ttlHours < 1 || ttlHours > 168) {
-      throw new ApiError('TTL must be between 1 and 168 hours', 400);
+    let ttlMinutes = (ttl !== undefined && ttl !== null && ttl !== '') ? parseInt(ttl as string) : 10080;
+    if (isNaN(ttlMinutes) || ttlMinutes < 1 || ttlMinutes > 10080) {
+      throw new ApiError('TTL must be between 1 minute and 7 days', 400);
     }
 
-    // Verify file exists in S3 (Optional but recommended for "Wait for file upload success")
-    // Note: S3 HEAD request could verify this.
-    // For now we assume frontend only calls this after successful upload.
+    // Verify file exists in S3 and get size
+    const s3Metadata = await s3Storage.getFileMetadata(key);
+    if (!s3Metadata) {
+       throw new ApiError('File not found in storage', 400); 
+    }
 
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + ttlHours);
+    expiresAt.setMinutes(expiresAt.getMinutes() + ttlMinutes);
 
     // Transactional DB Insert
     // Supabase doesn't support explicit transactions via JS client easily without RPC, 
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
         key: key,
         bucket: BUCKET_NAME,
         expires_at: expiresAt.toISOString(),
-        metadata: { originalName: filename, contentType },
+        metadata: { originalName: filename, contentType, size: s3Metadata.size },
         status: 'uploaded' // Mark as uploaded immediately as per requirement
       })
       .select('id')
@@ -75,11 +78,33 @@ export async function POST(request: NextRequest) {
     // Let's rely on relative path for frontend or absolute if needed.
     const accessUrl = `${appUrl}/files/${fileRecord.id}`;
 
+    // Async Logging
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || request.ip || 'unknown';
+    const userAgent = request.headers.get('user-agent') || undefined;
+    
+    (async () => {
+      try {
+        await logger.log({
+          type: 'upload',
+          file_id: fileRecord.id,
+          file_key: key,
+          file_name: filename,
+          file_size: s3Metadata.size,
+          mime_type: contentType,
+          status: 'success',
+          ip: ip,
+          user_agent: userAgent,
+        });
+      } catch (e) {
+        console.error('Async logging error:', e);
+      }
+    })();
+
     return successResponse({
       fileId: fileRecord.id,
       accessUrl: accessUrl,
       expiresAt: expiresAt.toISOString(),
-      ttlHours
+      ttlMinutes
     }, 'File confirmed and recorded successfully', 201);
 
   } catch (error) {

@@ -22,7 +22,8 @@ export function QRCodeGenerator() {
 
   // File Upload State
   const [file, setFile] = useState<File | null>(null);
-  const [ttl, setTtl] = useState(168);
+  const [ttlHours, setTtlHours] = useState<number | ''>(168);
+  const [ttlMinutes, setTtlMinutes] = useState<number | ''>(0);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
@@ -77,12 +78,20 @@ export function QRCodeGenerator() {
     }
   };
 
+  const safeHours = ttlHours === '' ? 0 : ttlHours;
+  const safeMinutes = ttlMinutes === '' ? 0 : ttlMinutes;
+  const totalMinutesCalc = safeHours * 60 + safeMinutes;
+  const isButtonDisabled = !file || uploading || ttlHours === '' || totalMinutesCalc === 0;
+
   const uploadFile = async () => {
     if (!file) return;
 
     setUploading(true);
     setUploadProgress(0);
     setError('');
+
+    // Use calculated values
+    const totalMinutes = totalMinutesCalc;
 
     try {
       // 1. Get presigned URL
@@ -92,7 +101,7 @@ export function QRCodeGenerator() {
         body: JSON.stringify({
           filename: file.name,
           contentType: file.type,
-          ttl,
+          ttl: totalMinutes,
         }),
       });
 
@@ -140,7 +149,7 @@ export function QRCodeGenerator() {
               key,
               filename: file.name,
               contentType: file.type,
-              ttl
+              ttl: totalMinutes
           })
       });
 
@@ -149,19 +158,27 @@ export function QRCodeGenerator() {
           throw new Error(confirmData.message || 'Failed to confirm upload');
       }
 
-      const { accessUrl, ttlHours } = confirmData.data;
+      const { accessUrl, ttlMinutes: confirmedMinutes } = confirmData.data;
 
       setContent(accessUrl);
       setGeneratedContent(accessUrl);
       
       // Show success message with TTL
-      const days = Math.floor(ttlHours / 24);
-      const hours = ttlHours % 24;
+      const days = Math.floor(confirmedMinutes / 1440);
+      const hours = Math.floor((confirmedMinutes % 1440) / 60);
+      const minutes = confirmedMinutes % 60;
+      
       const daysText = t('upload.days');
       const hoursText = t('upload.hours');
-      const timeString = days > 0 ? `${days}${daysText} ${hours}${hoursText}` : `${hours}${hoursText}`;
+      const minutesText = t('upload.minutes');
+      
+      let timeString = '';
+      if (days > 0) timeString += `${days}${daysText} `;
+      if (hours > 0) timeString += `${hours}${hoursText} `;
+      if (minutes > 0 || timeString === '') timeString += `${minutes}${minutesText}`;
+
       toast.success(t('upload.successTitle'), {
-        description: t('upload.successDesc', { timeString }),
+        description: t('upload.successDesc', { timeString: timeString.trim() }),
       });
 
       setFile(null);
@@ -223,7 +240,11 @@ export function QRCodeGenerator() {
                     <p className="text-sm font-medium">{t('upload.dragDrop')}</p>
                     <div className="text-xs text-muted-foreground">
                       <p>{t('upload.limitInfoSize')}</p>
-                      <p>{t('upload.limitInfoExpiration', { days: Math.floor(ttl / 24), hours: ttl % 24 })}</p>
+                      <p>{t('upload.limitInfoExpiration', { 
+                        days: Math.floor(totalMinutesCalc / 1440), 
+                        hours: Math.floor((totalMinutesCalc % 1440) / 60),
+                        minutes: totalMinutesCalc % 60
+                      })}</p>
                     </div>
                   </div>
                   <input
@@ -269,17 +290,62 @@ export function QRCodeGenerator() {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t('ttlLabel')}</label>
-                <input
-                  type="number"
-                  value={ttl}
-                  onChange={(e) => {
-                    const val = Number(e.target.value);
-                    setTtl(val > 168 ? 168 : val);
-                  }}
-                  min={1}
-                  max={168}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={ttlHours}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? '' : Number(e.target.value);
+                          if (val === '' || (val >= 0 && val <= 168)) {
+                            // If hours is 168, minutes must be 0
+                            if (val === 168) {
+                              setTtlMinutes(0);
+                            }
+                            setTtlHours(val);
+                          }
+                        }}
+                        min={0}
+                        max={168}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm pr-12"
+                      />
+                      <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">
+                        {t('upload.hours')}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={ttlMinutes}
+                        onChange={(e) => {
+                          const val = e.target.value === '' ? '' : Number(e.target.value);
+                          // If hours is 168, minutes cannot increase (must be 0)
+                          if (ttlHours === 168 && val !== 0 && val !== '') {
+                             return;
+                          }
+                          if (val === '' || (val >= 0 && val < 60)) {
+                            setTtlMinutes(val);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (ttlMinutes === '') {
+                            setTtlMinutes(0);
+                          }
+                        }}
+                        min={0}
+                        max={59}
+                        disabled={ttlHours === 168}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm pr-14"
+                      />
+                      <span className="absolute right-3 top-2.5 text-sm text-muted-foreground">
+                        {t('upload.minutes')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
                 <p className="text-xs text-muted-foreground">{t('ttlHelp')}</p>
               </div>
 
@@ -300,7 +366,7 @@ export function QRCodeGenerator() {
 
               <button
                 onClick={uploadFile}
-                disabled={!file || uploading}
+                disabled={isButtonDisabled}
                 className="w-full inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 h-10 px-4 py-2"
               >
                 {uploading ? (

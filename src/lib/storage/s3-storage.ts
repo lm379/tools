@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, DeleteObjectsCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { StorageService } from './types';
 
@@ -80,6 +80,23 @@ export class S3StorageService implements StorageService {
     }
     
     return { uploadUrl, publicUrl };
+  }
+
+  async getFileMetadata(key: string): Promise<{ size: number; contentType: string } | null> {
+    try {
+      const command = new HeadObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+      });
+      const response = await this.client.send(command);
+      return {
+        size: response.ContentLength || 0,
+        contentType: response.ContentType || 'application/octet-stream',
+      };
+    } catch (error) {
+      console.error('Error getting file metadata:', error);
+      return null;
+    }
   }
 
   async deleteFile(key: string): Promise<void> {

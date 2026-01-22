@@ -20,8 +20,15 @@ jest.mock('@/lib/supabase', () => ({
 }));
 
 describe('Cleanup API', () => {
+  const MOCK_SECRET = 'test-secret';
+
   beforeEach(() => {
     jest.clearAllMocks();
+    process.env.CRON_SECRET = MOCK_SECRET;
+  });
+
+  afterEach(() => {
+    delete process.env.CRON_SECRET;
   });
 
   it('should return 200 if no expired files', async () => {
@@ -36,7 +43,12 @@ describe('Cleanup API', () => {
       }),
     });
 
-    const req = new NextRequest('http://localhost/api/files/cleanup', { method: 'POST' });
+    const req = new NextRequest('http://localhost/api/files/cleanup', { 
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${MOCK_SECRET}`
+      }
+    });
     const res = await POST(req);
     const json = await res.json();
 
@@ -68,7 +80,12 @@ describe('Cleanup API', () => {
     // Mock S3 delete
     (s3Storage.deleteFiles as jest.Mock).mockResolvedValue(undefined);
 
-    const req = new NextRequest('http://localhost/api/files/cleanup', { method: 'POST' });
+    const req = new NextRequest('http://localhost/api/files/cleanup', { 
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${MOCK_SECRET}`
+      }
+    });
     const res = await POST(req);
     const json = await res.json();
 
@@ -95,7 +112,12 @@ describe('Cleanup API', () => {
     // Mock S3 error
     (s3Storage.deleteFiles as jest.Mock).mockRejectedValue(new Error('S3 Error'));
 
-    const req = new NextRequest('http://localhost/api/files/cleanup', { method: 'POST' });
+    const req = new NextRequest('http://localhost/api/files/cleanup', { 
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${MOCK_SECRET}`
+      }
+    });
     const res = await POST(req);
 
     expect(res.status).toBe(500);
