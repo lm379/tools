@@ -4,6 +4,9 @@ import { useState, useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { Download, UploadCloud, File as FileIcon, X, Check, Loader2, QrCode } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+
+import { TabGroup } from '@/components/ui/TabGroup';
 
 export function QRCodeGenerator() {
   const t = useTranslations('QRCode');
@@ -21,6 +24,7 @@ export function QRCodeGenerator() {
   const [file, setFile] = useState<File | null>(null);
   const [ttl, setTtl] = useState(168);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
 
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -77,6 +81,7 @@ export function QRCodeGenerator() {
     if (!file) return;
 
     setUploading(true);
+    setUploadProgress(0);
     setError('');
 
     try {
@@ -99,18 +104,33 @@ export function QRCodeGenerator() {
 
       const { uploadUrl, key } = responseData.data;
 
-      // 2. Upload to S3
-      const uploadRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
+      // 2. Upload to S3 with progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('Content-Type', file.type);
+        
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            setUploadProgress(percentComplete);
+          }
+        };
 
-      if (!uploadRes.ok) {
-        throw new Error(t('upload.errorUpload'));
-      }
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            reject(new Error(t('upload.errorUpload')));
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(new Error(t('upload.errorUpload')));
+        };
+
+        xhr.send(file);
+      });
 
       // 3. Confirm and Record in DB
       const confirmRes = await fetch('/api/files/confirm', {
@@ -137,8 +157,12 @@ export function QRCodeGenerator() {
       // Show success message with TTL
       const days = Math.floor(ttlHours / 24);
       const hours = ttlHours % 24;
-      const timeString = days > 0 ? `${days}天 ${hours}小时` : `${hours}小时`;
-      alert(`文件上传成功！\n文件将在 ${timeString} 后自动删除`);
+      const daysText = t('upload.days');
+      const hoursText = t('upload.hours');
+      const timeString = days > 0 ? `${days}${daysText} ${hours}${hoursText}` : `${hours}${hoursText}`;
+      toast.success(t('upload.successTitle'), {
+        description: t('upload.successDesc', { timeString }),
+      });
 
       setFile(null);
     } catch (err: any) {
@@ -152,28 +176,14 @@ export function QRCodeGenerator() {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8">
       {/* Tabs */}
-      <div className="flex gap-2 bg-muted/30 p-1.5 rounded-xl backdrop-blur-sm">
-        <button
-          onClick={() => setActiveTab('text')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
-            activeTab === 'text'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('tabs.text')}
-        </button>
-        <button
-          onClick={() => setActiveTab('file')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all duration-200 ${
-            activeTab === 'file'
-              ? 'bg-primary text-primary-foreground shadow-[0_4px_14px_0_rgba(0,0,0,0.1)] hover:scale-[1.02] active:scale-[0.98]'
-              : 'text-muted-foreground hover:text-foreground hover:bg-background/40'
-          }`}
-        >
-          {t('tabs.file')}
-        </button>
-      </div>
+      <TabGroup
+        value={activeTab}
+        onChange={setActiveTab}
+        items={[
+          { value: 'text', label: t('tabs.text') },
+          { value: 'file', label: t('tabs.file') },
+        ]}
+      />
 
       <div className="grid gap-8 md:grid-cols-2">
         <div className="space-y-6">
@@ -272,6 +282,21 @@ export function QRCodeGenerator() {
                 />
                 <p className="text-xs text-muted-foreground">{t('ttlHelp')}</p>
               </div>
+
+              {uploading && (
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{t('upload.uploading')}</span>
+                    <span>{Math.round(uploadProgress)}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all duration-300 ease-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={uploadFile}

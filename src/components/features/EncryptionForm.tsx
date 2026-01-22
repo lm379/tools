@@ -203,7 +203,7 @@ export function EncryptionForm() {
 
       {/* Middle Control Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 p-3">
-        
+
         {/* Left: Encodings */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">

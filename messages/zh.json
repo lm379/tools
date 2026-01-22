@@ -1,4 +1,9 @@
 {
+  "Metadata": {
+    "siteName": "DevTools",
+    "title": "DevTools - 多功能实用工具网站",
+    "description": "安全、快速、免费的日常开发工具，包括加密、编码、二维码生成和文件上传。"
+  },
   "Navigation": {
     "home": "首页",
     "encryption": "加密解密",
@@ -216,7 +221,11 @@
       "uploadComplete": "上传完成！",
       "errorSize": "文件大小超过 100MB 限制",
       "errorUpload": "文件上传失败",
-      "errorGeneric": "上传过程中发生错误"
+      "errorGeneric": "上传过程中发生错误",
+      "successTitle": "文件上传成功！",
+      "successDesc": "文件将在 {timeString} 后自动删除",
+      "days": "天",
+      "hours": "小时"
     }
   }
 }

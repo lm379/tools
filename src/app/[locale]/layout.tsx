@@ -4,16 +4,28 @@ import "../globals.css";
 import { Header } from "@/components/ui/Header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
+import { ClientToaster } from '@/components/ui/ClientToaster';
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: "DevTools - Multi-Function Utility Website",
-  description: "Secure, Fast, and Free tools for everyday tasks including Encryption, Encoding, QR Code Generation, and File Upload.",
-};
+export async function generateMetadata({
+  params: { locale }
+}: {
+  params: { locale: string };
+}) {
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
+
+  return {
+    title: {
+      default: t('title'),
+      template: `%s - ${t('siteName')}`
+    },
+    description: t('description')
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -43,6 +55,7 @@ export default async function RootLayout({
             <main className="container max-w-screen-2xl mx-auto py-6 px-4">
               {children}
             </main>
+            <ClientToaster />
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>
