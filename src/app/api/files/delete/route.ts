@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin, supabaseServiceKey } from '@/lib/supabase';
 import { s3Storage } from '@/lib/storage/s3-storage';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     // 1. Security Check
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
-    const validToken = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const validToken = process.env.CRON_SECRET || supabaseServiceKey;
 
     if (!token || token !== validToken) {
       return errorResponse('Unauthorized', 401);

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { s3Storage } from '@/lib/storage/s3-storage';
 import { BUCKET_NAME } from '@/lib/aws-s3';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabase, supabaseAdmin, supabaseServiceKey } from '@/lib/supabase';
 import { successResponse, handleApiError, ApiError } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
 // import { cdnSigner } from '@/lib/cdn-signer';
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     try {
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
       const deleteApiUrl = `${appUrl}/api/files/delete`;
-      const cronToken = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      const cronToken = process.env.CRON_SECRET || supabaseServiceKey || '';
 
       await supabaseAdmin.rpc('schedule_one_time_deletion', {
         p_key: key,
