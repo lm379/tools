@@ -18,13 +18,18 @@
  *
  * Database access:
  *   CloudBase Node SDK exposes app.rdb() (a postgREST client, same chain shape
- *   as @supabase/postgrest-js). Event Functions run inside the platform and get
- *   runtime credentials injected automatically, so we just call app.rdb() with
- *   no explicit API key.
+ *   as @supabase/postgrest-js).
+ *
+ *   The event-function runtime credential is NOT enough here: it maps to a PG
+ *   role without DELETE on public.files, so the cleanup step failed with
+ *   DATABASE_42501 "permission denied for table files". Configure a server API
+ *   Key (CLOUDBASE_APIKEY) so the SDK authenticates as service_role, which
+ *   bypasses RLS and has full DML on the table.
  *
  * Required environment variables (configure on the function, not in code):
- *   - TCB_ENV                : CloudBase env id (auto-injected in Event Function)
- *   - AWS_REGION             : e.g. us-east-1
+ *   - TCB_ENV                : CloudBase env id (e.g. cloudbase-xxxxxxxx)
+ *   - CLOUDBASE_APIKEY       : server API Key → service_role, needed for DELETE
+ *   - AWS_REGION             : e.g. cn-south-1
  *   - AWS_ACCESS_KEY_ID
  *   - AWS_SECRET_ACCESS_KEY
  *   - AWS_BUCKET_NAME
@@ -38,8 +43,16 @@ const {
   DeleteObjectsCommand,
 } = require('@aws-sdk/client-s3');
 
-const app = tcb.init();
-const db = app.rdb();
+// Pass env explicitly: tcb.init() with no args derives envId from the event-function
+// runtime context, and when that lookup fails envId is undefined, which makes
+// app.rdb() send `Accept-Profile: undefined` and blow up with
+// ERR_HTTP_INVALID_HEADER_VALUE. Same failure mode we hit on the Next.js side.
+const app = tcb.init({ env: process.env.TCB_ENV });
+
+// Same schema fix as src/lib/cloudbase.ts: Node SDK defaults the postgREST
+// 'database' option to envId, which is not a PG schema name. Our tables live
+// in the public schema, so force it explicitly.
+const db = app.rdb({ database: 'public' });
 
 const BATCH_SIZE = 100;
 

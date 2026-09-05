@@ -197,8 +197,18 @@ CloudBase 定时云函数 `cleanupExpiredFiles`（每 10 分钟运行一次）�
 
 1. [CloudBase 控制台](https://console.cloud.tencent.com/tcb) → 云函数 → `cleanupExpiredFiles`
 2. **函数配置** → **环境变量** → 添加：
+   - `TCB_ENV` — CloudBase 环境 ID（`YOUR_CLOUDBASE_ENV_ID`）
+   - `CLOUDBASE_APIKEY` — 服务端 API Key（见 1.1 节创建步骤）
    - `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_BUCKET_NAME`
    - 可选 `AWS_ENDPOINT` / `AWS_FORCE_PATH_STYLE`
 3. 保存后下次触发自动生效
 
-> 这个云函数不需要 `TCB_ENV`（CloudBase Event Function 自动注入运行时凭证），也不需要 `CLOUDBASE_APIKEY`（`app.rdb()` 在云函数内免鉴权）。
+> ⚠️ 云函数**不是**免鉴权的，两个 CloudBase 变量都必须配：
+>
+> - 不配 `TCB_ENV`：`tcb.init()` 从运行时上下文推导 envId 失败 → `app.rdb()` 发出
+>   `Accept-Profile: undefined` → `ERR_HTTP_INVALID_HEADER_VALUE` 报错。
+> - 不配 `CLOUDBASE_APIKEY`：云函数用运行时临时凭证，映射的 PG role 没有
+>   `files` 表 DELETE 权限 → `DATABASE_42501: permission denied for table files`。
+>   配了 Server API Key 后以 `service_role` 身份操作，绕过 RLS 且有完整 DML。
+>
+> 建议给云函数单独创建一个专用 API Key（而不是复用应用那份），便于独立撤销。
