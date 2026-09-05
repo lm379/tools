@@ -8,7 +8,6 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@aws-sdk/client-s3', '@aws-sdk/s3-request-presigner', '@cloudbase/node-sdk'],
   },
-  output: 'standalone',
 };
 
 export default withNextIntl(nextConfig);
