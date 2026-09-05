@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/cloudbase';
 import { cdnSigner } from '@/lib/cdn-signer';
 import { successResponse, handleApiError, ApiError } from '@/lib/api-response';
 
@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
       throw new ApiError('CDN signing is not configured', 503);
     }
 
-    // 1. Verify file exists in DB
+    // 1. Verify file exists in DB.
+    // CloudBase PG postgREST chain identical to the original Supabase code.
     const { data: file, error } = await supabase
       .from('files')
       .select('key, status')

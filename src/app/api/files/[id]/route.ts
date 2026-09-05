@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/cloudbase';
 import { cdnSigner } from '@/lib/cdn-signer';
 import { BUCKET_NAME } from '@/lib/aws-s3';
 import { logger } from '@/lib/logger';
@@ -17,7 +17,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 
   try {
-    // 1. Get file record with metadata
+    // 1. Get file record with metadata.
+    // CloudBase PG postgREST chain identical to the original Supabase code.
     const { data: file, error } = await supabase
       .from('files')
       .select('key, expires_at, status, metadata')

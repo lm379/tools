@@ -3,11 +3,11 @@
  */
 import { POST } from './route';
 import { NextRequest } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/cloudbase';
 import { cdnSigner } from '@/lib/cdn-signer';
 
 // Mocks
-jest.mock('@/lib/supabase', () => ({
+jest.mock('@/lib/cloudbase', () => ({
   supabase: {
     from: jest.fn(),
   },

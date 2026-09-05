@@ -1,0 +1,10 @@
+{
+  "name": "cleanup-expired-files",
+  "version": "1.0.0",
+  "description": "Periodic cleanup of expired file records and their S3 objects. Replaces the original external-cron + Supabase pg_cron one-shot deletion scheme.",
+  "main": "index.js",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.10.0",
+    "@aws-sdk/client-s3": "^3.913.0"
+  }
+}

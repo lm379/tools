@@ -1,14 +1,17 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/cloudbase';
 import { s3Storage } from '@/lib/storage/s3-storage';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
 export async function POST(request: NextRequest) {
   try {
     // 1. Security Check
+    // Previously the route accepted SUPABASE_SERVICE_ROLE_KEY as a fallback for
+    // CRON_SECRET. After migration, only CRON_SECRET is used — the CloudBase
+    // server API Key never leaves the server and is not a valid cron token.
     const authHeader = request.headers.get('Authorization');
     const token = authHeader?.replace('Bearer ', '');
-    const validToken = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const validToken = process.env.CRON_SECRET;
 
     if (!token || token !== validToken) {
       return errorResponse('Unauthorized', 401);
@@ -28,20 +31,15 @@ export async function POST(request: NextRequest) {
       await s3Storage.deleteFile(key);
     } catch (s3Error) {
       console.error(`[Auto-Delete] S3 Deletion failed for ${key}:`, s3Error);
-      // We continue to update DB status even if S3 fails (or maybe we should retry? 
-      // The requirement says "Retry mechanism". 
-      // If we return 500, pg_net might not retry automatically depending on config.
-      // But for now, let's log and try to mark as deleted or 'delete_failed' in DB.
-      // To strictly follow "Retry mechanism", we should probably return 500 here 
-      // so the job might run again if it was a transient error? 
-      // But pg_cron schedule is one-time (fixed time). It won't retry automatically at a later time 
-      // unless we reschedule. 
-      // A better retry strategy for "one-time" tasks is hard. 
-      // Let's assume we log it. The user requirement says "Ensure deletion includes...".
+      // The original one-shot cron schedule had no automatic retry either;
+      // returning 500 keeps the same behavior. The high-frequency cleanup
+      // cloud function (every 10 minutes) will retry deletion of any file
+      // whose expires_at has passed.
       return errorResponse('S3 Deletion Failed', 500);
     }
 
-    // 3. Update Database
+    // 3. Update Database: soft-delete the record.
+    // CloudBase PG postgREST chain identical to the original Supabase code.
     const { error: dbError } = await supabaseAdmin
       .from('files')
       .update({ status: 'deleted' })
@@ -53,16 +51,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Unschedule Cron Job
-    // We need to call SQL to unschedule.
-    const jobName = `del_${key}`;
-    const { error: cronError } = await supabaseAdmin.rpc('unschedule_cron_job', { job_name: jobName });
-
-    // Note: We might need to create this helper RPC or just call raw SQL if possible.
-    // supabase-js rpc calls a postgres function.
-    // Let's assume we can call cron.unschedule directly via SQL query if we can't make an RPC.
-    // But supabase-js doesn't support raw SQL query on the client easily without an RPC wrapping it 
-    // or using the 'pg' driver.
-    // So I should add `unschedule_cron_job` to the migration.
+    // The previous implementation called an unschedule_cron_job Supabase RPC
+    // that removed the one-shot pg_cron task for this key. With CloudBase,
+    // pg_cron + pg_net are not guaranteed on managed PG and we rely on the
+    // high-frequency cleanup cloud function instead, so there is nothing to
+    // unschedule here.
 
     return successResponse({ deleted: true, key }, 'File deleted and task cleaned up');
 

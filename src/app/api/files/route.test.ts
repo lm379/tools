@@ -4,7 +4,6 @@
 import { POST } from './route';
 import { NextRequest } from 'next/server';
 import { s3Storage } from '@/lib/storage/s3-storage';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
 
 // Mocks
 jest.mock('@/lib/storage/s3-storage', () => ({
@@ -13,17 +12,16 @@ jest.mock('@/lib/storage/s3-storage', () => ({
   },
 }));
 
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(),
-  },
-  supabaseAdmin: {
-    rpc: jest.fn(),
-  }
-}));
-
 jest.mock('@/lib/aws-s3', () => ({
   BUCKET_NAME: 'test-bucket',
+}));
+
+// CloudBase db mock not strictly needed here — this route no longer touches the
+// database (the original Supabase import was already commented out).
+jest.mock('@/lib/cloudbase', () => ({
+  db: { from: jest.fn() },
+  supabase: { from: jest.fn() },
+  supabaseAdmin: { rpc: jest.fn() },
 }));
 
 describe('File Upload API', () => {
@@ -60,19 +58,12 @@ describe('File Upload API', () => {
     expect(res.status).toBe(400);
   });
 
-  it('should create DB record, schedule task, and return upload URL', async () => {
+  it('should generate upload URL and return 201', async () => {
     // Setup Mocks
     (s3Storage.getUploadUrl as jest.Mock).mockResolvedValue({
       uploadUrl: 'https://upload',
       publicUrl: 'https://public/test.png',
     });
-
-    const insertMock = jest.fn().mockResolvedValue({ error: null });
-    (supabase.from as jest.Mock).mockReturnValue({
-      insert: insertMock,
-    });
-
-    (supabaseAdmin.rpc as jest.Mock).mockResolvedValue({ error: null });
 
     const req = new NextRequest('http://localhost/api/files', {
       method: 'POST',
@@ -85,7 +76,6 @@ describe('File Upload API', () => {
     const json = await res.json();
 
     // Verify expiration time is roughly 24 hours from now
-    // Since we don't insert anymore, we check response
     const expiresAt = new Date(json.data.expiresAt).getTime();
     const now = Date.now();
     const expected = now + 24 * 60 * 60 * 1000;

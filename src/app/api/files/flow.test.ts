@@ -5,7 +5,7 @@ import { POST as UploadPOST } from '@/app/api/files/route';
 import { POST as ConfirmPOST } from '@/app/api/files/confirm/route';
 import { GET as RedirectGET } from '@/app/api/files/[id]/route';
 import { NextRequest } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/cloudbase';
 import { s3Storage } from '@/lib/storage/s3-storage';
 
 // Mocks
@@ -13,11 +13,15 @@ jest.mock('@/lib/aws-s3', () => ({
   BUCKET_NAME: 'test-bucket',
 }));
 
-jest.mock('@/lib/supabase', () => ({
+// CloudBase PG postgREST client (same chain shape as the original Supabase mock).
+jest.mock('@/lib/cloudbase', () => ({
   supabase: {
     from: jest.fn(),
   },
   supabaseAdmin: {
+    // The original code called .rpc('schedule_one_time_deletion', ...) here.
+    // After migration to CloudBase this one-shot scheduling is removed, so
+    // rpc is kept in the mock only to detect accidental regressions.
     rpc: jest.fn(),
   }
 }));
@@ -69,14 +73,14 @@ describe('Complete File Upload Flow', () => {
   });
 
   describe('Step 2: Confirm Upload', () => {
-    it('should record file in DB and schedule deletion', async () => {
+    it('should record file in DB and skip one-shot deletion scheduling', async () => {
       // Mock S3 Metadata
       (s3Storage.getFileMetadata as jest.Mock).mockResolvedValue({
         size: 1024,
         contentType: 'image/png'
       });
 
-      // Mock DB Insert
+      // Mock DB Insert (postgREST chain)
       const mockFileId = '123-uuid';
       (supabase.from as jest.Mock).mockReturnValue({
         insert: jest.fn().mockReturnValue({
@@ -103,8 +107,10 @@ describe('Complete File Upload Flow', () => {
       expect(json.data.fileId).toBe(mockFileId);
       expect(json.data.accessUrl).toContain(`/files/${mockFileId}`);
 
-      // Check RPC call for scheduling
-      expect(supabaseAdmin.rpc).toHaveBeenCalledWith('schedule_one_time_deletion', expect.anything());
+      // The original test asserted that supabaseAdmin.rpc('schedule_one_time_deletion', ...)
+      // was invoked. CloudBase has no equivalent one-shot cron, so this route intentionally
+      // no longer schedules anything — verify rpc was NOT called.
+      expect(supabaseAdmin.rpc).not.toHaveBeenCalled();
     });
   });
 
@@ -113,7 +119,7 @@ describe('Complete File Upload Flow', () => {
       process.env.CDN_DOMAIN = 'cdn.example.com';
       process.env.TYPEA_SIGN_TOKEN = 'secret';
 
-      // Mock DB Select
+      // Mock DB Select (postgREST chain)
       (supabase.from as jest.Mock).mockReturnValue({
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({

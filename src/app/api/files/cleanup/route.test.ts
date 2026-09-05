@@ -4,7 +4,7 @@
 import { POST } from './route';
 import { NextRequest } from 'next/server';
 import { s3Storage } from '@/lib/storage/s3-storage';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/cloudbase';
 
 // Mocks
 jest.mock('@/lib/storage/s3-storage', () => ({
@@ -13,7 +13,10 @@ jest.mock('@/lib/storage/s3-storage', () => ({
   },
 }));
 
-jest.mock('@/lib/supabase', () => ({
+// Mock CloudBase db (postgREST chain) — same shape as the original Supabase
+// mock. The route calls supabase.from('files').select(...).lt(...).neq(...).limit()
+// for the query, and supabase.from('files').delete().in(...) for the removal.
+jest.mock('@/lib/cloudbase', () => ({
   supabase: {
     from: jest.fn(),
   },
@@ -32,7 +35,7 @@ describe('Cleanup API', () => {
   });
 
   it('should return 200 if no expired files', async () => {
-    // Mock Supabase select
+    // Mock postgREST select chain
     (supabase.from as jest.Mock).mockReturnValue({
       select: jest.fn().mockReturnValue({
         lt: jest.fn().mockReturnValue({
@@ -62,20 +65,25 @@ describe('Cleanup API', () => {
       { id: '2', key: 'file2.txt' },
     ];
 
-    // Mock Supabase select
-    const selectMock = jest.fn().mockResolvedValue({ data: mockFiles, error: null });
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        lt: jest.fn().mockReturnValue({
-          neq: jest.fn().mockReturnValue({
-            limit: selectMock,
+    // The route hits supabase.from('files') twice:
+    //   1) .select().lt().neq().limit()  -> query
+    //   2) .delete().in()                -> batch delete
+    // Use mockReturnValueOnce to feed different shapes per call.
+    (supabase.from as jest.Mock)
+      .mockReturnValueOnce({
+        select: jest.fn().mockReturnValue({
+          lt: jest.fn().mockReturnValue({
+            neq: jest.fn().mockReturnValue({
+              limit: jest.fn().mockResolvedValue({ data: mockFiles, error: null }),
+            }),
           }),
         }),
-      }),
-      delete: jest.fn().mockReturnValue({
-        in: jest.fn().mockResolvedValue({ error: null }),
-      }),
-    });
+      })
+      .mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
+          in: jest.fn().mockResolvedValue({ error: null }),
+        }),
+      });
 
     // Mock S3 delete
     (s3Storage.deleteFiles as jest.Mock).mockResolvedValue(undefined);
@@ -97,13 +105,11 @@ describe('Cleanup API', () => {
   it('should handle S3 error', async () => {
     const mockFiles = [{ id: '1', key: 'file1.txt' }];
 
-    // Mock Supabase select
-    const selectMock = jest.fn().mockResolvedValue({ data: mockFiles, error: null });
-    (supabase.from as jest.Mock).mockReturnValue({
+    (supabase.from as jest.Mock).mockReturnValueOnce({
       select: jest.fn().mockReturnValue({
         lt: jest.fn().mockReturnValue({
           neq: jest.fn().mockReturnValue({
-            limit: selectMock,
+            limit: jest.fn().mockResolvedValue({ data: mockFiles, error: null }),
           }),
         }),
       }),

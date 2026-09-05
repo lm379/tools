@@ -1,11 +1,15 @@
 import { NextRequest } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/cloudbase';
 import { s3Storage } from '@/lib/storage/s3-storage';
 import { successResponse, errorResponse } from '@/lib/api-response';
 
 export async function POST(request: NextRequest) {
   try {
-    // Optional: Verify Authorization header if needed
+    // Optional: Verify Authorization header if needed.
+    // This HTTP entry still accepts a CRON_SECRET bearer token for manual / external
+    // cron triggers. The CloudBase scheduled cloud function
+    // (cloudfunctions/cleanupExpiredFiles) bypasses this route and runs the same
+    // logic directly inside the function with platform credentials.
     const authHeader = request.headers.get('Authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return errorResponse('Unauthorized', 401);
@@ -14,7 +18,9 @@ export async function POST(request: NextRequest) {
     // 1. Query expired files
     const now = new Date().toISOString();
 
-    // Batch size of 100 to ensure reliability within timeout limits
+    // Batch size of 100 to ensure reliability within timeout limits.
+    // CloudBase PG exposes a postgREST client (app.rdb()), so the chain is
+    // identical to the original Supabase code.
     const { data: expiredFiles, error: fetchError } = await supabase
       .from('files')
       .select('id, key')
@@ -31,8 +37,9 @@ export async function POST(request: NextRequest) {
       return successResponse({ count: 0 }, 'No expired files found');
     }
 
-    const keysToDelete = expiredFiles.map(f => f.key);
-    const idsToDelete = expiredFiles.map(f => f.id);
+    const expiredFilesTyped = (expiredFiles || []) as Array<{ id: string; key: string }>;
+    const keysToDelete = expiredFilesTyped.map(f => f.key);
+    const idsToDelete = expiredFilesTyped.map(f => f.id);
 
     console.log(`Found ${keysToDelete.length} expired files to delete.`);
 

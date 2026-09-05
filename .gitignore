@@ -35,3 +35,9 @@ coverage/
 .tef_dist/*
   
 supabase
+
+# WorkBuddy workspace-local data (per-developer, not shared)
+.workbuddy/
+
+# TypeScript incremental build cache
+*.tsbuildinfo

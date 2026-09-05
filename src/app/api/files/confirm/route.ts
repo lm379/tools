@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { s3Storage } from '@/lib/storage/s3-storage';
 import { BUCKET_NAME } from '@/lib/aws-s3';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/cloudbase';
 import { successResponse, handleApiError, ApiError } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
 // import { cdnSigner } from '@/lib/cdn-signer';
@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + ttlMinutes);
 
-    // Transactional DB Insert
-    // Supabase doesn't support explicit transactions via JS client easily without RPC, 
-    // but a single insert is atomic.
+    // Transactional DB Insert.
+    // CloudBase PG exposes a postgREST client (app.rdb()) so the insert chain
+    // is identical to the original Supabase code. A single insert is atomic.
     const { data: fileRecord, error: dbError } = await supabase
       .from('files')
       .insert({
@@ -44,29 +44,24 @@ export async function POST(request: NextRequest) {
       .select('id')
       .single();
 
-    if (dbError) {
-      console.error('Supabase Error:', dbError);
+    if (dbError || !fileRecord) {
+      console.error('CloudBase PG Error:', dbError);
       // Rollback: Delete file from S3 if DB insert fails
       await s3Storage.deleteFile(key);
       throw new ApiError('Failed to save file record, rolled back upload', 500);
     }
 
     // Schedule Deletion Task
-    try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-      const deleteApiUrl = `${appUrl}/api/files/delete`;
-      const cronToken = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-      await supabaseAdmin.rpc('schedule_one_time_deletion', {
-        p_key: key,
-        p_execute_at: expiresAt.toISOString(),
-        p_api_endpoint: deleteApiUrl,
-        p_auth_token: cronToken
-      });
-    } catch (err) {
-      console.error('Error scheduling task:', err);
-      // Non-fatal, daily cleanup will catch it
-    }
+    // The original implementation called a Supabase pg_cron RPC
+    // (schedule_one_time_deletion) to schedule a one-shot HTTP deletion exactly
+    // at expires_at. CloudBase PG is managed PostgreSQL and pg_cron + pg_net
+    // extensions are not guaranteed to be available there. Instead, we rely on
+    // the high-frequency cleanup cloud function (cloudfunctions/cleanupExpiredFiles,
+    // runs every 10 minutes via a timer trigger) to delete expired files.
+    // The original Next.js code already notes: "Non-fatal, daily cleanup will
+    // catch it", so omitting per-file one-shot scheduling keeps the same fallback
+    // guarantee while simplifying the architecture.
+    void supabaseAdmin; // kept for parity with the original export surface
 
     // Generate Access URL
     // Format: ${base_url}/files/${file_id}
