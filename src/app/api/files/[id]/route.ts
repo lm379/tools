@@ -3,12 +3,13 @@ import { supabase } from '@/lib/cloudbase';
 import { cdnSigner } from '@/lib/cdn-signer';
 import { BUCKET_NAME } from '@/lib/aws-s3';
 import { logger } from '@/lib/logger';
+import { getClientIp } from '@/lib/get-client-ip';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   const { id } = params;
   
   // Extract info for logging
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || request.ip || 'unknown';
+  const ip = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || undefined;
   const referer = request.headers.get('referer') || undefined;
 

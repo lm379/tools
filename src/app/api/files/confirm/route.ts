@@ -4,6 +4,7 @@ import { BUCKET_NAME } from '@/lib/aws-s3';
 import { supabase, supabaseAdmin } from '@/lib/cloudbase';
 import { successResponse, handleApiError, ApiError } from '@/lib/api-response';
 import { logger } from '@/lib/logger';
+import { getClientIp } from '@/lib/get-client-ip';
 // import { cdnSigner } from '@/lib/cdn-signer';
 
 export async function POST(request: NextRequest) {
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     const accessUrl = `${appUrl}/files/${fileRecord.id}`;
 
     // Async Logging
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || request.ip || 'unknown';
+    const ip = getClientIp(request);
     const userAgent = request.headers.get('user-agent') || undefined;
     
     (async () => {

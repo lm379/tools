@@ -26,10 +26,14 @@ export async function POST(request: NextRequest) {
       throw new ApiError('AWS Bucket Name is not configured', 500);
     }
 
-    // 2. Upload path generation (Date/UUID-filename)
+    // 2. Upload path generation.
+    // Use a random UUID as the object key (with date prefix for bucket
+    // organization) — the original filename is intentionally NOT embedded
+    // so the S3 key does not leak the user's filename. The original filename
+    // is stored separately in the `files.metadata.originalName` column.
     const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
     const uuid = crypto.randomUUID();
-    const uniqueFilename = `${date}/${uuid}-${filename}`;
+    const uniqueFilename = `${date}/${uuid}`;
 
     // Calculate expiration
     const expiresAt = new Date();

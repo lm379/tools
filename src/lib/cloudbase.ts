@@ -53,9 +53,19 @@ export interface PostgrestLikeClient {
 
 /**
  * 数据库客户端。运行时通过 app.rdb() 拿到 postgREST 客户端。
- * 由于 SDK 类型声明未暴露 rdb()，这里用类型断言访问运行时方法。
+ *
+ * ⚠️ 必须显式传 `database: 'public'`：Node SDK 的 getEntity 默认把 `database`
+ * 设成 `envId`，而 envId 不是 PG schema 名，postgREST 会报
+ * DATABASE_PGRST106 "Invalid schema: <envId>"。我们的 files / file_logs
+ * 表建在 `public` schema 里，所以这里强制覆盖为 `public`。
+ *
+ * 由于 SDK 类型声明未暴露 rdb() 的签名，这里用类型断言访问运行时方法。
  */
-export const db: PostgrestLikeClient = (app as unknown as { rdb: () => PostgrestLikeClient }).rdb();
+export const db: PostgrestLikeClient = (
+  app as unknown as {
+    rdb: (opts?: { database?: string }) => PostgrestLikeClient;
+  }
+).rdb({ database: 'public' });
 
 // 兼容原 supabase / supabaseAdmin 命名：CloudBase Node SDK 中
 // app.rdb() 返回的客户端即可读也可写（携带 service_role 凭据），无需再区分 anon/admin。

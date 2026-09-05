@@ -23,7 +23,13 @@ export default function middleware(req: NextRequest) {
   if (pathname.startsWith('/api')) {
     return NextResponse.next();
   }
-  // 3) Skip any path with a dot (favicon.ico, robots.txt, sitemap.xml, …).
+  // 3) Skip the file-share redirect route /files/[id] — these short public
+  //    links must NOT be locale-redirected, otherwise /files/<uuid> 307s to
+  //    /<locale>/files/<uuid> and the redirect chain breaks.
+  if (pathname.startsWith('/files')) {
+    return NextResponse.next();
+  }
+  // 4) Skip any path with a dot (favicon.ico, robots.txt, sitemap.xml, …).
   if (pathname.lastIndexOf('.') > pathname.lastIndexOf('/')) {
     return NextResponse.next();
   }
