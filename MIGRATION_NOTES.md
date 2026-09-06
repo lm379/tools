@@ -1,7 +1,7 @@
 # Supabase → CloudBase 迁移说明
 
 > 分支：`migrate-supabase-to-cloudbase`
-> 目标环境：`YOUR_CLOUDBASE_ENV_ID`（体验版，PostgreSQL 模式，ap-shanghai）
+> 目标环境：`<CLOUDBASE_ENV_ID>`（体验版，PostgreSQL 模式，ap-shanghai）
 > 完成时间：2026-09-05
 
 ## 一、为什么这样迁
@@ -114,12 +114,12 @@ db.rpc('function_name', args)
 
 ### 4.1 创建 CloudBase Server API Key
 
-1. 进入 CloudBase 控制台 → 环境 `YOUR_CLOUDBASE_ENV_ID` → 鉴权 → API Key 管理
+1. 进入 CloudBase 控制台 → 环境 `<CLOUDBASE_ENV_ID>` → 鉴权 → API Key 管理
 2. 创建一个 server API Key（用于 Next.js 服务端调用 `app.rdb()`）
 3. 把返回的 key 填到 `.env`：
 
    ```
-   TCB_ENV=YOUR_CLOUDBASE_ENV_ID
+   TCB_ENV=<CLOUDBASE_ENV_ID>
    CLOUDBASE_APIKEY=<your-server-api-key>
    ```
 

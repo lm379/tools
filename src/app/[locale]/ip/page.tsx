@@ -2,13 +2,11 @@
 import { IPToolbox } from '@/components/features/IPToolbox';
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
+import { buildPageMetadata } from '@/lib/seo';
 
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }) {
   const t = await getTranslations({ locale, namespace: 'IP' });
-  return {
-    title: t('title'),
-    description: t('description')
-  };
+  return buildPageMetadata({ locale, path: '/ip', title: t('title'), description: t('description') });
 }
 
 export default function IPPage() {

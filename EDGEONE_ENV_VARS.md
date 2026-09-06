@@ -22,12 +22,12 @@
 
 **`TCB_ENV` 获取**：
 
-- 已知值：`YOUR_CLOUDBASE_ENV_ID`
+- 已知值：`<CLOUDBASE_ENV_ID>`
 - 控制台路径：[CloudBase 控制台](https://console.cloud.tencent.com/tcb) → 左侧选你的环境 → 概览页顶部「环境ID」一栏
 
 **`CLOUDBASE_APIKEY` 获取**：
 
-1. 打开 [CloudBase 控制台](https://console.cloud.tencent.com/tcb) → 选环境 `YOUR_CLOUDBASE_ENV_ID`
+1. 打开 [CloudBase 控制台](https://console.cloud.tencent.com/tcb) → 选环境 `<CLOUDBASE_ENV_ID>`
 2. 左侧菜单 → **环境** → **鉴权** → **API Key 管理** 标签页
 3. 点 **创建 API Key**
    - 名称：`tools-edgeone`（或你习惯的名字，便于后续轮换/撤销）
@@ -197,7 +197,7 @@ CloudBase 定时云函数 `cleanupExpiredFiles`（每 10 分钟运行一次）�
 
 1. [CloudBase 控制台](https://console.cloud.tencent.com/tcb) → 云函数 → `cleanupExpiredFiles`
 2. **函数配置** → **环境变量** → 添加：
-   - `TCB_ENV` — CloudBase 环境 ID（`YOUR_CLOUDBASE_ENV_ID`）
+   - `TCB_ENV` — CloudBase 环境 ID（`<CLOUDBASE_ENV_ID>`）
    - `CLOUDBASE_APIKEY` — 服务端 API Key（见 1.1 节创建步骤）
    - `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_BUCKET_NAME`
    - 可选 `AWS_ENDPOINT` / `AWS_FORCE_PATH_STYLE`
