@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/cloudbase';
 import { cdnSigner } from '@/lib/cdn-signer';
-import { BUCKET_NAME } from '@/lib/aws-s3';
+import { s3Storage } from '@/lib/storage/s3-storage';
 import { logger } from '@/lib/logger';
 import { getClientIp } from '@/lib/get-client-ip';
 
@@ -81,9 +81,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       const signedUrl = cdnSigner.generateSignedUrl(file.key, 300);
       return NextResponse.redirect(signedUrl, 302);
     } else {
-      // Fallback to S3 Public URL if CDN not configured
-      const s3Url = `https://${BUCKET_NAME}.s3.amazonaws.com/${file.key}`;
-      return NextResponse.redirect(s3Url, 302);
+      // Fallback to the storage public URL if CDN is not configured.
+      // Uses s3Storage.getPublicUrl() so S3-compatible providers
+      // (AWS_ENDPOINT set, e.g. Qiniu Kodo) resolve correctly instead of
+      // pointing at the hardcoded <bucket>.s3.amazonaws.com host.
+      return NextResponse.redirect(s3Storage.getPublicUrl(file.key), 302);
     }
 
   } catch (error) {

@@ -47,6 +47,36 @@ export class S3StorageService implements StorageService {
       }
   }
 
+  /**
+   * Builds the public (unsigned) URL for an object.
+   *
+   * Honors AWS_ENDPOINT for S3-compatible providers (e.g. Qiniu Kodo, MinIO):
+   * with an endpoint set we must NOT fall back to the hardcoded
+   * `<bucket>.s3.amazonaws.com` host, otherwise the URL points at AWS S3 and
+   * 404s / resolves to someone else's bucket.
+   */
+  getPublicUrl(key: string): string {
+    if (this.endpoint) {
+      // Remove trailing slash
+      const baseUrl = this.endpoint.replace(/\/$/, '');
+      if (this.forcePathStyle) {
+        return `${baseUrl}/${this.bucket}/${key}`;
+      }
+      // Attempt virtual-host style if hostname allows
+      try {
+        const urlObj = new URL(baseUrl);
+        urlObj.hostname = `${this.bucket}.${urlObj.hostname}`;
+        urlObj.pathname = `/${key}`;
+        return urlObj.toString();
+      } catch {
+        // Fallback to path style if URL manipulation fails
+        return `${baseUrl}/${this.bucket}/${key}`;
+      }
+    }
+    // Standard AWS S3 URL
+    return `https://${this.bucket}.s3.amazonaws.com/${key}`;
+  }
+
   async getUploadUrl(key: string, contentType: string, expiresIn: number = 3600): Promise<{ uploadUrl: string; publicUrl: string }> {
     const command = new PutObjectCommand({
       Bucket: this.bucket,
@@ -55,30 +85,8 @@ export class S3StorageService implements StorageService {
     });
 
     const uploadUrl = await getSignedUrl(this.client, command, { expiresIn });
-    
-    let publicUrl = '';
-    if (this.endpoint) {
-        // Remove trailing slash
-        const baseUrl = this.endpoint.replace(/\/$/, '');
-        if (this.forcePathStyle) {
-            publicUrl = `${baseUrl}/${this.bucket}/${key}`;
-        } else {
-            // Attempt virtual-host style if hostname allows
-            try {
-                const urlObj = new URL(baseUrl);
-                urlObj.hostname = `${this.bucket}.${urlObj.hostname}`;
-                urlObj.pathname = `/${key}`;
-                publicUrl = urlObj.toString();
-            } catch {
-                // Fallback to path style if URL manipulation fails
-                publicUrl = `${baseUrl}/${this.bucket}/${key}`;
-            }
-        }
-    } else {
-        // Standard AWS S3 URL
-        publicUrl = `https://${this.bucket}.s3.amazonaws.com/${key}`; 
-    }
-    
+    const publicUrl = this.getPublicUrl(key);
+
     return { uploadUrl, publicUrl };
   }
 
